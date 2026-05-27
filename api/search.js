@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
     if (!NOTION_TOKEN || !DATABASE_ID) {
       return res.status(500).json({
-        error: "Missing NOTION_TOKEN or NOTION_DATABASE_ID environment variable.",
+        error: "Missing NOTION_TOKEN or NOTION_DATABASE_ID",
       });
     }
 
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          page_size: 20
+          page_size: 50,
         }),
       }
     );
@@ -35,26 +35,32 @@ export default async function handler(req, res) {
       });
     }
 
-    const results = (data.results || []).map((page) => {
-      const props = page.properties || {};
-      let title = "제목없음";
+    const results = (data.results || [])
+      .map((page) => {
+        const props = page.properties || {};
 
-      for (const key of Object.keys(props)) {
-        if (props[key].type === "title") {
-          title = props[key].title?.map((t) => t.plain_text).join("") || "제목없음";
-          break;
+        let title = "제목없음";
+
+        for (const key in props) {
+          if (props[key].type === "title") {
+            title =
+              props[key].title?.map((t) => t.plain_text).join("") ||
+              "제목없음";
+            break;
+          }
         }
-      }
 
-      return {
-        title,
-        url: page.url,
-        id: page.id,
-      };
-    }).filter((item) => {
-      if (!query) return true;
-      return item.title.toLowerCase().includes(query.toLowerCase());
-    }).slice(0, 10);
+        return {
+          title,
+          url: page.url,
+          id: page.id,
+        };
+      })
+      .filter((item) => {
+        if (!query) return true;
+        return item.title.toLowerCase().includes(query.toLowerCase());
+      })
+      .slice(0, 20);
 
     return res.status(200).json({
       query,
