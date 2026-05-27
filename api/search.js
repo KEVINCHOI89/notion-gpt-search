@@ -38,7 +38,6 @@ export default async function handler(req, res) {
     const results = (data.results || [])
       .map((page) => {
         const props = page.properties || {};
-
         let title = "제목없음";
 
         for (const key in props) {
@@ -58,7 +57,11 @@ export default async function handler(req, res) {
       })
       .filter((item) => {
         if (!query) return true;
-        return item.title.toLowerCase().includes(query.toLowerCase());
+
+        const safeTitle = (item.title || "").toString().toLowerCase();
+        const safeQuery = (query || "").toString().toLowerCase();
+
+        return safeTitle.includes(safeQuery);
       })
       .slice(0, 20);
 
