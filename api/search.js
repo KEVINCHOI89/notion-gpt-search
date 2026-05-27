@@ -34,56 +34,40 @@ export default async function handler(req, res) {
     if (!response.ok) {
       return res.status(response.status).json({
         error: "Notion API error",
-        detail: data,
       });
     }
 
     const results = [];
 
     for (const page of data.results || []) {
-      try {
-        const props = page.properties || {};
-        let title = "제목없음";
+      const props = page.properties || {};
+      let title = "제목없음";
 
-        for (const key of Object.keys(props)) {
-          const prop = props[key];
+      for (const key of Object.keys(props)) {
+        const prop = props[key];
 
-          if (prop && prop.type === "title") {
-            title = Array.isArray(prop.title)
-              ? prop.title.map((t) => t.plain_text || "").join("")
-              : "제목없음";
-
-            break;
-          }
+        if (prop && prop.type === "title") {
+          title = Array.isArray(prop.title)
+            ? prop.title.map((t) => t.plain_text || "").join("")
+            : "제목없음";
+          break;
         }
+      }
 
-        const safeTitle = String(title).toLowerCase();
-        const safeQuery = String(query).toLowerCase();
+      const safeTitle = String(title).toLowerCase();
+      const safeQuery = String(query).toLowerCase();
 
-        if (!query || safeTitle.includes(safeQuery)) {
-          results.push({
-            title,
-            url: page.url || "",
-            id: page.id || "",
-          });
-        }
-      } catch (innerError) {
-        console.error("Page parse error:", innerError);
+      if (!query || safeTitle.includes(safeQuery)) {
+        results.push(title);
       }
     }
 
     return res.status(200).json({
-      success: true,
-      query,
-      count: results.length,
-      results,
+      results: results,
     });
   } catch (error) {
-    console.error("Server error:", error);
-
     return res.status(500).json({
-      success: false,
-      error: error.message || "Unknown server error",
+      error: "Server error",
     });
   }
 }
